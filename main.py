@@ -40,7 +40,7 @@ def process_command(command):
         return chat(command)
 
 def main():
-    print("⚡ RudraX is online! Type 'exit' to quit.\n")
+    print(" RudraX is online! Type 'exit' to quit.\n")
     use_voice = input("Use voice input? (y/n): ").lower() == "y"
 
     while True:
@@ -54,7 +54,7 @@ def main():
             continue
 
         if command.lower() in ["exit", "quit", "bye"]:
-            print("RudraX: Goodbye! ⚡")
+            print("RudraX: Goodbye!")
             break
 
         response = process_command(command)
