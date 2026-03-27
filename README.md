@@ -12,7 +12,7 @@ A powerful voice-enabled command-line AI assistant built with Python.
 - 🚀 Open Linux apps
 
 ## Setup
-1. Clone: git clone https://github.com/YOUR_USERNAME/rudraX.git
+1. Clone: git clone https://github.com/AKHIL-GIT-ARC/RudraX-CLI-agent
 2. Activate: source venv/bin/activate
 3. Install: pip install -r requirements.txt
 4. Add keys: cp .env.example .env then edit .env
