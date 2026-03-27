@@ -8,30 +8,33 @@ from groq import Groq
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 SAMPLE_RATE = 16000
-DURATION    = 8        # max seconds to record
+DURATION    = 8
+DEVICE      = 0        # HDA Intel PCH CX11880 — your mic
 
 def listen():
-    print("Listening... speak now! (recording for up to 8 seconds)")
-    print("Press Ctrl+C to stop early and process what you said.")
-
+    print("Listening... speak now!")
     try:
-        # Record audio from mic
         audio = sd.rec(
             int(DURATION * SAMPLE_RATE),
             samplerate=SAMPLE_RATE,
             channels=1,
-            dtype="float32"
+            dtype="float32",
+            device=DEVICE
         )
-        sd.wait()  # wait until recording is done
+        sd.wait()
 
-        # Save to a temp .wav file
+        volume = np.max(np.abs(audio))
+        print(f"Volume level detected: {volume:.4f}")
+
+        if volume < 0.001:
+            return "Mic picked up silence. Check if your mic is unmuted in system settings."
+
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
             tmp_path = tmp.name
             sf.write(tmp_path, audio, SAMPLE_RATE)
 
-        print("Processing your voice...")
+        print("Processing with Groq Whisper...")
 
-        # Send to Groq Whisper
         with open(tmp_path, "rb") as audio_file:
             transcription = client.audio.transcriptions.create(
                 file=audio_file,
@@ -41,20 +44,14 @@ def listen():
                 temperature=0.0
             )
 
-        os.unlink(tmp_path)  # delete temp file
+        os.unlink(tmp_path)
 
         text = transcription.strip()
         if text:
             print(f"You said: {text}")
             return text
         else:
-            return "I didn't catch that. Please try again."
-
-    except KeyboardInterrupt:
-        # User pressed Ctrl+C to stop recording early
-        sd.stop()
-        print("\nStopped early, processing...")
-        return listen()
+            return "Couldn't catch that. Please try again."
 
     except Exception as e:
         return f"Voice error: {str(e)}"
