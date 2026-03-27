@@ -7,8 +7,6 @@
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![Groq](https://img.shields.io/badge/Powered%20by-Groq-f55036?style=flat-square)](https://groq.com)
 [![Whisper](https://img.shields.io/badge/Voice-Whisper%20v3-22c55e?style=flat-square)](https://groq.com)
-[![License](https://img.shields.io/badge/License-MIT-a855f7?style=flat-square)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-orange?style=flat-square)](CONTRIBUTING.md)
 
 </div>
 
@@ -85,10 +83,10 @@ rudrax/
 ├── main.py                  ← entry point, command router
 │
 ├── modules/
-│   ├── ai_chat.py           ← LLM conversation (Groq)
-│   ├── problem_solver.py    ← step-by-step solver (Groq)
-│   ├── vision_solver.py     ← image understanding (Groq)
-│   ├── voice_input.py       ← mic → Whisper → text (Groq)
+│   ├── ai_chat.py           ← LLM conversation 
+│   ├── problem_solver.py    ← step-by-step solver 
+│   ├── vision_solver.py     ← image understanding
+│   ├── voice_input.py       ← mic → Whisper → text
 │   ├── weather.py           ← live weather (Open-Meteo)
 │   ├── search.py            ← Google search via browser
 │   ├── app_launcher.py      ← opens desktop apps
@@ -107,5 +105,5 @@ Built by [Akhil](https://github.com/AKHIL-GIT-ARC)
 ---
 
 <div align="center">
-<sub>Built different. Runs in your terminal. Powered by Groq.</sub>
+<sub>Built different. Runs in your terminal.</sub>
 </div>
