@@ -8,17 +8,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from modules.app_launcher import open_app
-from modules.search import search
+from modules.search import google_search
 from modules.datetime_util import get_time, get_date
 from modules.weather import get_weather
 from modules.ai_chat import chat
 from modules.vision_solver import solve_from_image
 from modules.problem_solver import solve
+import re
 
 def extract_city(cmd):
-    # Handles: "weather in Rajkot", "Rajkot weather",
-    # "what's the weather in Rajkot now", "weather Rajkot"
-    import re
     patterns = [
         r"weather\s+in\s+([a-zA-Z\s]+?)(?:\s+now|\s+today|$)",
         r"weather\s+(?:of\s+)?([a-zA-Z\s]+?)(?:\s+now|\s+today|$)",
@@ -28,17 +26,15 @@ def extract_city(cmd):
         match = re.search(pattern, cmd.strip(), re.IGNORECASE)
         if match:
             city = match.group(1).strip()
-            # Remove filler words Whisper sometimes adds
             for filler in ["the", "a", "an", "please", "now", "today", "current"]:
                 city = re.sub(rf"\b{filler}\b", "", city, flags=re.IGNORECASE).strip()
             if city:
                 return city
-    return "Rajkot"  # default
+    return "Rajkot"
 
 def process_command(command):
     cmd = command.lower().strip()
 
-    # Exit check — catch any variation Whisper might produce
     exit_words = ["exit", "quit", "bye", "goodbye", "stop", "close"]
     if any(word in cmd for word in exit_words):
         return "__EXIT__"
@@ -80,7 +76,6 @@ def main():
 
         response = process_command(command)
 
-        # Handle exit from both voice and text
         if response == "__EXIT__":
             print("RudraX: Goodbye!")
             break
