@@ -7,16 +7,24 @@ from groq import Groq
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-SAMPLE_RATE = 16000
-DURATION    = 8
-DEVICE      = 0        # HDA Intel PCH CX11880 — your mic
+DURATION = 8
+DEVICE   = 0
+
+def get_sample_rate():
+    # Auto-detect what sample rate your device actually supports
+    device_info = sd.query_devices(DEVICE, "input")
+    rate = int(device_info["default_samplerate"])
+    print(f"Using sample rate: {rate} Hz")
+    return rate
 
 def listen():
     print("Listening... speak now!")
     try:
+        sample_rate = get_sample_rate()
+
         audio = sd.rec(
-            int(DURATION * SAMPLE_RATE),
-            samplerate=SAMPLE_RATE,
+            int(DURATION * sample_rate),
+            samplerate=sample_rate,
             channels=1,
             dtype="float32",
             device=DEVICE
@@ -27,11 +35,18 @@ def listen():
         print(f"Volume level detected: {volume:.4f}")
 
         if volume < 0.001:
-            return "Mic picked up silence. Check if your mic is unmuted in system settings."
+            return "Mic picked up silence. Check if mic is unmuted in system settings."
+
+        # Resample to 16000Hz if needed (Whisper works best at 16k)
+        if sample_rate != 16000:
+            import scipy.signal as signal
+            num_samples = int(len(audio) * 16000 / sample_rate)
+            audio = signal.resample(audio, num_samples)
+            sample_rate = 16000
 
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
             tmp_path = tmp.name
-            sf.write(tmp_path, audio, SAMPLE_RATE)
+            sf.write(tmp_path, audio, sample_rate)
 
         print("Processing with Groq Whisper...")
 
