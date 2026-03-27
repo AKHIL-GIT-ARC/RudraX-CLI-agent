@@ -1,28 +1,60 @@
-import speech_recognition as sr
+import os
+import tempfile
+import numpy as np
+import sounddevice as sd
+import soundfile as sf
+from groq import Groq
+
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+SAMPLE_RATE = 16000
+DURATION    = 8        # max seconds to record
 
 def listen():
-    r = sr.Recognizer()
-    r.energy_threshold = 300
-    r.dynamic_energy_threshold = True
-    r.pause_threshold = 1.0
+    print("Listening... speak now! (recording for up to 8 seconds)")
+    print("Press Ctrl+C to stop early and process what you said.")
 
     try:
-        with sr.Microphone() as source:
-            print("🎤 RudraX is listening... speak now!")
-            r.adjust_for_ambient_noise(source, duration=1)
-            print("🟢 Ready! Speak your command...")
-            audio = r.listen(source, timeout=10, phrase_time_limit=8)
+        # Record audio from mic
+        audio = sd.rec(
+            int(DURATION * SAMPLE_RATE),
+            samplerate=SAMPLE_RATE,
+            channels=1,
+            dtype="float32"
+        )
+        sd.wait()  # wait until recording is done
 
-        print("⏳ Processing your voice...")
-        text = r.recognize_google(audio)
-        print(f"You said: {text}")
-        return text
+        # Save to a temp .wav file
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+            tmp_path = tmp.name
+            sf.write(tmp_path, audio, SAMPLE_RATE)
 
-    except sr.WaitTimeoutError:
-        return "I didn't hear anything. Please speak louder or try text input."
-    except sr.UnknownValueError:
-        return "Sorry, RudraX couldn't understand that. Try again."
-    except sr.RequestError:
-        return "Speech service unavailable. Check your internet connection."
+        print("Processing your voice...")
+
+        # Send to Groq Whisper
+        with open(tmp_path, "rb") as audio_file:
+            transcription = client.audio.transcriptions.create(
+                file=audio_file,
+                model="whisper-large-v3-turbo",
+                language="en",
+                response_format="text",
+                temperature=0.0
+            )
+
+        os.unlink(tmp_path)  # delete temp file
+
+        text = transcription.strip()
+        if text:
+            print(f"You said: {text}")
+            return text
+        else:
+            return "I didn't catch that. Please try again."
+
+    except KeyboardInterrupt:
+        # User pressed Ctrl+C to stop recording early
+        sd.stop()
+        print("\nStopped early, processing...")
+        return listen()
+
     except Exception as e:
         return f"Voice error: {str(e)}"

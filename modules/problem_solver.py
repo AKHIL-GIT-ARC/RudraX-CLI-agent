@@ -1,14 +1,15 @@
-import anthropic, os
+import os
+from groq import Groq
 
-client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 def solve(problem_text):
-    response = client.messages.create(
-        model="claude-opus-4-6",
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
         max_tokens=1024,
         messages=[{
             "role": "user",
             "content": f"Solve this step by step:\n\n{problem_text}"
         }]
     )
-    return response.content[0].text
+    return response.choices[0].message.content

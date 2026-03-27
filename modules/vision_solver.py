@@ -1,7 +1,9 @@
-import anthropic, base64, os
+import os
+import base64
 from pathlib import Path
+from groq import Groq
 
-client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 def solve_from_image(image_path, question="What do you see? Explain and solve if there's a problem."):
     image_data = Path(image_path).read_bytes()
@@ -10,15 +12,20 @@ def solve_from_image(image_path, question="What do you see? Explain and solve if
     media_map = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png"}
     media_type = media_map.get(ext, "image/jpeg")
 
-    response = client.messages.create(
-        model="claude-opus-4-6",
+    response = client.chat.completions.create(
+        model="meta-llama/llama-4-scout-17b-16e-instruct",
         max_tokens=1024,
         messages=[{
             "role": "user",
             "content": [
-                {"type": "image", "source": {"type": "base64", "media_type": media_type, "data": b64}},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:{media_type};base64,{b64}"
+                    }
+                },
                 {"type": "text", "text": question}
             ]
         }]
     )
-    return response.content[0].text
+    return response.choices[0].message.content
